@@ -785,8 +785,8 @@ class ContourEaseDialog(QDialog):
             zvals = [float(f["Z"]) for f in points.getFeatures() if f["Z"] is not None]
             if zvals:
                 self._log(f"Using Z field (index {z_idx}) range: {min(zvals):.3f} .. {max(zvals):.3f}")
-        except Exception:
-            pass
+        except (TypeError, ValueError, KeyError) as e:
+            self._log(f"Could not log Z range: {e}")
 
         # INTERPOLATION_DATA format used by QGIS:
         # path::~::use_z(0/1)::~::field_index::~::type(0=Points)
@@ -1026,8 +1026,8 @@ class ContourEaseDialog(QDialog):
                     f"Contour labels use field '{elev_field}' "
                     f"(range {min(vals):.3f} .. {max(vals):.3f})"
                 )
-        except Exception:
-            pass
+        except (TypeError, ValueError, KeyError) as e:
+            self._log(f"Could not log contour elevation range: {e}")
 
         interval = self.spin_interval.value()
         index_every = self.spin_index_every.value() if self.chk_index.isChecked() else 999999
@@ -1258,10 +1258,11 @@ class ContourEaseDialog(QDialog):
             dxf = QgsDxfExport()
             dxf.setForce2d(True)
             dxf.setLayerTitleAsName(True)
-            try:
-                dxf.setFlags(QgsDxfExport.FlagNoMText)
-            except Exception:
-                pass
+            if hasattr(QgsDxfExport, "FlagNoMText"):
+                try:
+                    dxf.setFlags(QgsDxfExport.FlagNoMText)
+                except (AttributeError, TypeError) as e:
+                    self._log(f"DXF FlagNoMText not applied: {e}")
 
             dxf_layers = []
             for lyr in prepared:
@@ -1286,10 +1287,11 @@ class ContourEaseDialog(QDialog):
             ms.setDestinationCrs(prepared[0].crs())
             ms.setLayers(prepared)
             dxf.setMapSettings(ms)
-            try:
-                dxf.setDestinationCrs(prepared[0].crs())
-            except Exception:
-                pass
+            if hasattr(dxf, "setDestinationCrs"):
+                try:
+                    dxf.setDestinationCrs(prepared[0].crs())
+                except (AttributeError, TypeError) as e:
+                    self._log(f"DXF setDestinationCrs not applied: {e}")
 
             from qgis.PyQt.QtCore import QFile, QIODevice, QTextStream
             f = QFile(dxf_path)
@@ -1328,8 +1330,8 @@ class ContourEaseDialog(QDialog):
                 if os.path.isfile(out):
                     written.append(out)
                     continue
-            except Exception:
-                pass
+            except Exception as e:
+                self._log(f"gdal:convertformat DXF skipped for {lyr.name()}: {e}")
             # Last fallback: shapefile then hope user converts; still try writer with no attrs
             options = QgsVectorFileWriter.SaveVectorOptions()
             options.driverName = "DXF"
@@ -1405,10 +1407,12 @@ class ContourEaseDialog(QDialog):
                 # force 2D
                 try:
                     g = QgsGeometry(g)
-                    g.get().dropZValue()
-                    g.get().dropMValue()
-                except Exception:
-                    pass
+                    if hasattr(g.get(), "dropZValue"):
+                        g.get().dropZValue()
+                    if hasattr(g.get(), "dropMValue"):
+                        g.get().dropMValue()
+                except (AttributeError, TypeError) as e:
+                    self._log(f"Could not drop Z/M values: {e}")
                 nf.setGeometry(g)
             attrs = []
             for src_i, _ in keep_indices:
@@ -1442,10 +1446,12 @@ class ContourEaseDialog(QDialog):
             if g and not g.isEmpty():
                 try:
                     g = QgsGeometry(g)
-                    g.get().dropZValue()
-                    g.get().dropMValue()
-                except Exception:
-                    pass
+                    if hasattr(g.get(), "dropZValue"):
+                        g.get().dropZValue()
+                    if hasattr(g.get(), "dropMValue"):
+                        g.get().dropMValue()
+                except (AttributeError, TypeError) as e:
+                    self._log(f"Could not drop Z/M values: {e}")
                 nf.setGeometry(g)
             feats.append(nf)
         pr.addFeatures(feats)

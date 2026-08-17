@@ -47,7 +47,7 @@ QGIS plugin to easily create professional contour maps and DEMs from XYZ data (C
 3. **DEM** — pick IDW or TIN and cell size
 4. **Contours** — set interval, enable smoothing / index / labels  
    - Optionally tick **Clip contours to a boundary polygon** and browse to a polygon shapefile (or GPKG / GeoJSON)
-5. **Output & Run** — optionally save to folder and/or **Export to DXF** (tick Contours / Boundary / Points).
+5. **Output & Run** — optionally save to folder and/or **Export to DXF** (tick Contours / Boundary / Points)
 6. Click **Create Contours & DEM**
 
 ## DXF export notes
