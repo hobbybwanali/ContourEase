@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Transparent background – fills toolbar button edge-to-edge -->
+
+  <!-- Bottom elevation layer (larger, fills more of canvas) -->
+  <path d="M 4 50 C 18 60, 46 60, 60 50 C 62 34, 54 14, 36 6 C 16 0, 4 18, 4 50 Z"
+        fill="#93b023" fill-opacity="0.35" stroke="#6b8219" stroke-width="3"/>
+
+  <!-- Middle elevation layer -->
+  <path d="M 10 44 C 20 52, 44 52, 54 44 C 56 30, 48 14, 34 12 C 20 10, 10 24, 10 44 Z"
+        fill="#589632" fill-opacity="0.55" stroke="#3d6b22" stroke-width="3"/>
+
+  <!-- Top peak (strong orange, more solid) -->
+  <path d="M 18 38 C 26 44, 38 44, 46 38 C 48 28, 42 18, 32 18 C 22 18, 16 28, 18 38 Z"
+        fill="#ee7913" fill-opacity="0.9" stroke="#c45f0a" stroke-width="3"/>
+
+  <!-- Sparkle / wand – thicker for small-size readability -->
+  <path d="M 46 8 L 56 18 M 51 5 L 51 21 M 43 13 L 59 13"
+        stroke="#ee7913" stroke-width="3.5" stroke-linecap="round"/>
+</svg>

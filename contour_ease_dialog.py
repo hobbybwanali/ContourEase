@@ -33,6 +33,57 @@ from qgis.gui import QgsProjectionSelectionWidget, QgsFileWidget
 
 import processing
 
+# ---------------------------------------------------------------------------
+# Qt5 / Qt6 + QGIS API compatibility (enums moved under namespaces in Qt6)
+# ---------------------------------------------------------------------------
+def _enum(parent, *names):
+    """Return the first existing attribute path on parent (Qt5 or Qt6 style)."""
+    for name in names:
+        obj = parent
+        try:
+            for part in name.split('.'):
+                obj = getattr(obj, part)
+            return obj
+        except AttributeError:
+            continue
+    raise AttributeError(
+        f"None of {names!r} found on {parent!r}"
+    )
+
+
+# Qt alignment
+AlignCenter = _enum(Qt, 'AlignmentFlag.AlignCenter', 'AlignCenter')
+
+# QgsColorRampShader
+ColorRampInterpolated = _enum(
+    QgsColorRampShader, 'Type.Interpolated', 'Interpolated'
+)
+ColorRampContinuous = _enum(
+    QgsColorRampShader, 'ClassificationMode.Continuous', 'Continuous'
+)
+
+# QgsPalLayerSettings placement
+PalPlacementLine = _enum(QgsPalLayerSettings, 'Placement.Line', 'Line')
+PalOnLine = _enum(QgsPalLayerSettings, 'OnLine', 'PlacementFlags.OnLine')
+
+# QgsUnitTypes
+RenderPoints = _enum(QgsUnitTypes, 'RenderUnit.RenderPoints', 'RenderPoints')
+
+# QgsWkbTypes
+PolygonGeometry = _enum(QgsWkbTypes, 'GeometryType.PolygonGeometry', 'PolygonGeometry')
+
+# QgsVectorFileWriter
+WriterNoError = _enum(QgsVectorFileWriter, 'WriterError.NoError', 'NoError')
+
+# QIODevice open mode
+try:
+    from qgis.PyQt.QtCore import QIODevice
+    OpenWriteOnly = _enum(QIODevice, 'OpenModeFlag.WriteOnly', 'WriteOnly')
+    OpenTruncate = _enum(QIODevice, 'OpenModeFlag.Truncate', 'Truncate')
+    OpenText = _enum(QIODevice, 'OpenModeFlag.Text', 'Text')
+except Exception:
+    OpenWriteOnly = OpenTruncate = OpenText = None
+
 
 class ContourEaseDialog(QDialog):
     """Dialog for ContourEase plugin."""
@@ -60,11 +111,11 @@ class ContourEaseDialog(QDialog):
 
         # Title
         title = QLabel("<h2>ContourEase</h2>")
-        title.setAlignment(Qt.AlignCenter)
+        title.setAlignment(AlignCenter)
         main_layout.addWidget(title)
 
         subtitle = QLabel("Load XYZ data → Transform CRS → Create DEM → Generate Contours")
-        subtitle.setAlignment(Qt.AlignCenter)
+        subtitle.setAlignment(AlignCenter)
         subtitle.setStyleSheet("color: #555; margin-bottom: 8px;")
         main_layout.addWidget(subtitle)
 
@@ -981,8 +1032,8 @@ class ContourEaseDialog(QDialog):
 
         shader = QgsRasterShader()
         color_ramp_shader = QgsColorRampShader()
-        color_ramp_shader.setColorRampType(QgsColorRampShader.Interpolated)
-        color_ramp_shader.setClassificationMode(QgsColorRampShader.Continuous)
+        color_ramp_shader.setColorRampType(ColorRampInterpolated)
+        color_ramp_shader.setClassificationMode(ColorRampContinuous)
         color_ramp_shader.setMinimumValue(min_val)
         color_ramp_shader.setMaximumValue(max_val)
 
@@ -1072,12 +1123,12 @@ class ContourEaseDialog(QDialog):
             settings.isExpression = False
             settings.enabled = True
             settings.drawLabels = True
-            settings.placement = QgsPalLayerSettings.Line
-            settings.placementFlags = QgsPalLayerSettings.OnLine
+            settings.placement = PalPlacementLine
+            settings.placementFlags = PalOnLine
 
             text_format = QgsTextFormat()
             text_format.setSize(self.spin_label_size.value())
-            text_format.setSizeUnit(QgsUnitTypes.RenderPoints)
+            text_format.setSizeUnit(RenderPoints)
             text_format.setColor(QColor(30, 30, 30))
             font = QFont("Arial")
             font.setBold(False)
@@ -1141,7 +1192,7 @@ class ContourEaseDialog(QDialog):
 
         # Accept polygon / multipolygon only
         wkb = layer.wkbType()
-        if not QgsWkbTypes.geometryType(wkb) == QgsWkbTypes.PolygonGeometry:
+        if not QgsWkbTypes.geometryType(wkb) == PolygonGeometry:
             # try dissolve of mixed; still require polygon
             raise ValueError(
                 "Boundary must be a polygon layer (Polygon or MultiPolygon)."
@@ -1215,7 +1266,7 @@ class ContourEaseDialog(QDialog):
             clean = self._prepare_layer_for_dxf(layer, name, elev_field)
             prepared.append(clean)
             # Ensure visible to processing / project
-            if clean.id() not in [l.id() for l in QgsProject.instance().mapLayers().values()]:
+            if clean.id() not in [ml.id() for ml in QgsProject.instance().mapLayers().values()]:
                 QgsProject.instance().addMapLayer(clean, False)
 
         # --- 1) native:dxfexport ---
@@ -1258,11 +1309,11 @@ class ContourEaseDialog(QDialog):
             dxf = QgsDxfExport()
             dxf.setForce2d(True)
             dxf.setLayerTitleAsName(True)
-            if hasattr(QgsDxfExport, "FlagNoMText"):
-                try:
-                    dxf.setFlags(QgsDxfExport.FlagNoMText)
-                except (AttributeError, TypeError) as e:
-                    self._log(f"DXF FlagNoMText not applied: {e}")
+            try:
+                flag = _enum(QgsDxfExport, "Flag.FlagNoMText", "FlagNoMText")
+                dxf.setFlags(flag)
+            except (AttributeError, TypeError) as e:
+                self._log(f"DXF FlagNoMText not applied: {e}")
 
             dxf_layers = []
             for lyr in prepared:
@@ -1295,7 +1346,7 @@ class ContourEaseDialog(QDialog):
 
             from qgis.PyQt.QtCore import QFile, QIODevice, QTextStream
             f = QFile(dxf_path)
-            if not f.open(QIODevice.WriteOnly | QIODevice.Truncate | QIODevice.Text):
+            if not f.open(OpenWriteOnly | OpenTruncate | OpenText):
                 raise RuntimeError(f"Cannot open DXF for writing: {dxf_path}")
             # writeToFile signature varies by QGIS version
             ok = False
@@ -1349,7 +1400,7 @@ class ContourEaseDialog(QDialog):
                 code = QgsVectorFileWriter.writeAsVectorFormat(
                     geom_only, out, "UTF-8", geom_only.crs(), "DXF"
                 )
-            if code == QgsVectorFileWriter.NoError and os.path.isfile(out):
+            if code == WriterNoError and os.path.isfile(out):
                 written.append(out)
             else:
                 self._log(f"Could not write DXF for layer {lyr.name()} (code {code})")

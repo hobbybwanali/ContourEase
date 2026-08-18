@@ -1,13 +1,13 @@
 [general]
 name=ContourEase
 qgisMinimumVersion=3.16
-qgisMaximumVersion=3.99
+qgisMaximumVersion=4.99
 description=Easily create professional contour maps and DEMs from XYZ CSV or Excel data with CRS conversion
 about=ContourEase simplifies creation of high-quality contour maps in QGIS from XYZ point data (CSV or Excel). Features: select X/Y/Z columns, optional CRS transformation (Lat/Long to UTM or any CRS), create interpolated DEM (IDW or TIN), generate smooth contour lines labeled by elevation (Z), clip contours to a boundary polygon, export contours/boundary/points to DXF, index contours and professional styling. Ideal for geology, mining, topography and engineering. Excel support requires openpyxl or pandas.
-version=1.2.2
+version=1.2.6
 author=Hobby Bwanali
 email=hobbybwanali@gmail.com
-changelog=1.2.2 - Security: removed bare except/pass (Bandit). 1.2.1 - Reliable DXF export. 1.2.0 - Boundary clip + DXF. 1.1.0 - ContourEase rename, Z labels. 1.0.0 - Initial.
+changelog=1.2.6 - Fix E741 ambiguous variable name. 1.2.5 - Qt6 compatibility. 1.2.4 - Larger icon. 1.2.3 - New icon. 1.2.2 - Bandit fixes. 1.2.1 - DXF. 1.2.0 - Boundary clip. 1.1.0 - ContourEase. 1.0.0 - Initial.
 tags=contour,contours,dem,xyz,interpolation,idw,tin,utm,crs,geology,topography,elevation,raster
 homepage=https://github.com/hobbybwanali/ContourEase
 tracker=https://github.com/hobbybwanali/ContourEase/issues

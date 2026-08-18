@@ -95,4 +95,4 @@ class ContourEase:
         if self.dlg is None:
             self.dlg = ContourEaseDialog(self.iface)
         self.dlg.show()
-        result = self.dlg.exec_()
+        result = self.dlg.exec()
